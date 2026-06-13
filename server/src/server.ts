@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5001;
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://task-flow-ochre-one.vercel.app",
   "https://task-flow-6ewcxftiv-abindas123s-projects.vercel.app",
 ];
 
@@ -32,7 +33,10 @@ const corsOptions = {
 
 await apolloServer.start();
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get("/", (_req, res) => {
