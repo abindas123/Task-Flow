@@ -12,7 +12,28 @@ const allowedOrigins = [
   "https://task-flow-6ewcxftiv-abindas123s-projects.vercel.app",
 ];
 
+const corsOptions = {
+  origin: function (
+    origin: string | undefined,
+    callback: (error: Error | null, allow?: boolean) => void
+  ) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
 await apolloServer.start();
+
+app.use(cors(corsOptions));
+app.use(express.json());
 
 app.get("/", (_req, res) => {
   res.send("Task Flow API is running");
@@ -20,11 +41,6 @@ app.get("/", (_req, res) => {
 
 app.use(
   "/graphql",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  express.json(),
   expressMiddleware(apolloServer, {
     context: async ({ req }) => {
       const authHeader = req.headers.authorization || "";
@@ -37,7 +53,6 @@ app.use(
 
       try {
         const user = jwt.verify(token, process.env.JWT_SECRET as string);
-
         return { user };
       } catch {
         return { user: null };
@@ -45,10 +60,6 @@ app.use(
     },
   })
 );
-
-app.get("/", (_req, res) => {
-  res.send("server is running");
-});
 
 app.listen(PORT, () => {
   console.log(`GraphQL server running on port ${PORT}`);
