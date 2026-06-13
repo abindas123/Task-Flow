@@ -5,13 +5,25 @@ import { expressMiddleware } from "@as-integrations/express5";
 import { apolloServer } from "./Config/apolloserver.js";
 
 const app = express();
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://YOUR-FRONTEND-URL.vercel.app",
+];
 
 await apolloServer.start();
 
+app.get("/", (_req, res) => {
+  res.send("Task Flow API is running");
+});
+
 app.use(
   "/graphql",
-  cors(),
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
   express.json(),
   expressMiddleware(apolloServer, {
     context: async ({ req }) => {
@@ -24,10 +36,7 @@ app.use(
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        const user = jwt.verify(
-          token,
-          process.env.JWT_SECRET as string
-        );
+        const user = jwt.verify(token, process.env.JWT_SECRET as string);
 
         return { user };
       } catch {
@@ -42,5 +51,5 @@ app.get("/", (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`GraphQL running at http://localhost:${PORT}/graphql`);
+  console.log(`GraphQL server running on port ${PORT}`);
 });
