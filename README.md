@@ -1,8 +1,8 @@
 # Task Flow
 
-**Task Flow** is a full-stack project management platform inspired by tools like Jira. It allows users to manage workspaces, projects, tasks, comments, task dependencies, and project activity logs through a GraphQL API and a React TypeScript frontend.
+Task Flow is a full-stack project management application inspired by tools like Jira. It allows users to manage workspaces, projects, tasks, comments, task dependencies, and project activity logs through a GraphQL API and a React TypeScript frontend.
 
-The project is designed as an **AI-ready project management system**, with future support for AI-powered task summaries, project Q&A, and RAG-based project insights.
+The project is built to demonstrate real-world full-stack development skills using React, TypeScript, Node.js, GraphQL, PostgreSQL, and Material UI. It is also designed as an AI-ready productivity platform, with planned support for AI task summaries, project Q&A, and RAG-based project insights.
 
 ---
 
@@ -11,8 +11,8 @@ The project is designed as an **AI-ready project management system**, with futur
 ### Authentication
 
 * User registration and login
-* Password hashing with bcrypt
 * JWT-based authentication
+* Password hashing with bcrypt
 * Protected frontend routes
 
 ### Workspace Management
@@ -24,9 +24,9 @@ The project is designed as an **AI-ready project management system**, with futur
 ### Project Management
 
 * Create projects inside workspaces
-* Project status tracking
+* Track project status
 * View project details
-* Navigate between workspace and project pages
+* Navigate between workspaces, projects, and tasks
 
 ### Task Management
 
@@ -39,26 +39,19 @@ The project is designed as an **AI-ready project management system**, with futur
 
 * Add comments to tasks
 * View task-specific discussion history
-* Comment activity is recorded in project activity logs
+* Record comment activity in the project activity log
 
 ### Task Dependencies
 
 * Add dependencies between tasks
-* Represent blocked/blocking relationships
+* Represent blocked/blocking task relationships
 * Example: `Frontend UI` is blocked by `Backend API`
-* Prevents self-dependency at the database level
+* Prevent self-dependency at the database level
 
 ### Activity Logs
 
 * Automatically records important project actions
-* Supports:
-
-  * Workspace created
-  * Project created
-  * Task created
-  * Task status changed
-  * Comment added
-  * Dependency added
+* Tracks workspace creation, project creation, task creation, task status changes, comments, and dependencies
 * Uses PostgreSQL `JSONB` payloads for flexible activity metadata
 
 ### AI-Ready Architecture
@@ -69,7 +62,7 @@ Planned AI features:
 * AI project assistant
 * Project Q&A
 * RAG-based retrieval using task descriptions, comments, dependencies, and activity logs
-* Future pgvector integration for semantic search
+* Future `pgvector` integration for semantic search
 
 ---
 
@@ -79,10 +72,10 @@ Planned AI features:
 
 * React
 * TypeScript
+* Vite
 * Material UI
 * Apollo Client
 * React Router
-* Vite
 
 ### Backend
 
@@ -109,26 +102,10 @@ Planned AI features:
 
 ## Project Structure
 
-
+```txt
 Task-Flow/
 │
-├── backend/
-│   ├── src/
-│   │   ├── Config/
-│   │   ├── Db/
-│   │   │   └── Queries/
-│   │   ├── Graphql/
-│   │   │   ├── Resolvers/
-│   │   │   └── TypeDefs/
-│   │   ├── Middlewares/
-│   │   ├── Services/
-│   │   └── index.ts
-│   │
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-│
-├── frontend/
+├── Client/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── graphql/
@@ -141,29 +118,47 @@ Task-Flow/
 │   │
 │   ├── package.json
 │   ├── vite.config.ts
-│   └── .env.example
+│   └── .gitignore
 │
+├── server/
+│   ├── src/
+│   │   ├── Config/
+│   │   ├── Db/
+│   │   │   ├── Migrations/
+│   │   │   └── Queries/
+│   │   ├── Graphql/
+│   │   │   ├── Resolvers/
+│   │   │   └── TypeDefs/
+│   │   ├── Services/
+│   │   └── server.ts
+│   │
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── .gitignore
 └── README.md
+```
 
-
-
+---
 
 ## Core Database Entities
 
-The application uses a relational PostgreSQL database with the following main entities:
+The application uses a relational PostgreSQL database with these main entities:
 
-* users`
-* workspaces`
-* workspace_members`
-* projects`
-* tasks`
-* comments`
-* task_dependency`
-* activitylogs`
+* `users`
+* `workspaces`
+* `workspace_members`
+* `projects`
+* `tasks`
+* `comments`
+* `task_dependency`
+* `activitylogs`
 
-### Activity Log Example
+---
 
-json
+## Activity Log Example
+
+```json
 {
   "activity_type": "TASK_STATUS_CHANGED",
   "payload_json": {
@@ -172,72 +167,124 @@ json
     "new_status": "DONE"
   }
 }
+```
 
+This allows the project page to show meaningful history such as:
 
+```txt
+Abin changed task "Build dependency feature" from TODO to DONE.
+```
 
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/abindas123/Task-Flow.git
+cd Task-Flow
+```
+
+---
+
+## Backend Setup
+
+### 1. Go to the server folder
+
+```bash
+cd server
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Create a `.env` file
+
+Create a `.env` file inside the `server` folder:
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+JWT_SECRET=your_jwt_secret_here
+PORT=5001
+```
+
+### 4. Run database migrations
+
+```bash
+npm run migrate
+```
+
+### 5. Start the backend
+
+```bash
+npm run dev
+```
+
+The GraphQL API runs at:
+
+```txt
+http://localhost:5001/graphql
+```
+
+---
+
+## Frontend Setup
+
+### 1. Go to the Client folder
+
+```bash
+cd Client
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Start the frontend
+
+```bash
+npm run dev
+```
+
+The frontend runs at:
+
+```txt
+http://localhost:5173
+```
+
+---
+
+## Environment Variables
+
+### Server
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+JWT_SECRET=your_jwt_secret_here
+PORT=5001
+```
+
+### Client
+
+If the frontend uses an environment-based GraphQL URL, create a `.env` file inside `Client`:
+
+```env
+VITE_GRAPHQL_URL=http://localhost:5001/graphql
+```
+
+---
 
 ## GraphQL API Overview
 
-### Authentication
-
-graphql
-mutation RegisterUser {
-  registerUser(name: "...", email: "...", password: "...") {
-    token
-    user {
-      id
-      name
-      email
-    }
-  }
-}
-
-
-graphql
-mutation LoginUser {
-  loginUser(email: "...", password: "...") {
-    token
-    user {
-      id
-      name
-      email
-    }
-  }
-}
-
-
-### Workspaces
-
-graphql
-query GetWorkspaces {
-  getWorkspaces {
-    id
-    name
-    description
-    owner_id
-    created_at
-    updated_at
-  }
-}
-
-
-### Projects
-
-graphql
-query GetProjectsByWorkspace($workspace_id: ID!) {
-  getProjectsByWorkspace(workspace_id: $workspace_id) {
-    id
-    name
-    description
-    status
-    workspace_id
-  }
-}
-
-
 ### Tasks
 
-graphql
+```graphql
 query GetTasksByProject($project_id: ID!) {
   Gettasksbyproject(project_id: $project_id) {
     id
@@ -250,26 +297,11 @@ query GetTasksByProject($project_id: ID!) {
     due_date
   }
 }
-
-
-### Comments
-
-graphql
-query GetCommentsByTask($task_id: ID!) {
-  Getcommentsbytask(task_id: $task_id) {
-    id
-    task_id
-    author_id
-    body
-    created_at
-    updated_at
-  }
-}
-
+```
 
 ### Dependencies
 
-graphql
+```graphql
 query GetDependenciesByTask($task_id: ID!) {
   GetDependenciesByTask(task_id: $task_id) {
     id
@@ -280,11 +312,11 @@ query GetDependenciesByTask($task_id: ID!) {
     depends_on_task_title
   }
 }
-
+```
 
 ### Activity Logs
 
-graphql
+```graphql
 query GetActivityLogsByProject($project_id: ID!) {
   GetActivityLogsByProject(project_id: $project_id) {
     id
@@ -298,101 +330,6 @@ query GetActivityLogsByProject($project_id: ID!) {
     created_at
   }
 }
-
-
-
-
-## Getting Started
-
-### 1. Clone the repository
-
-bash
-git clone https://github.com/abindas123/Task-Flow.git
-cd Task-Flow
-
-
-
-
-## Backend Setup
-
-### 1. Go to backend folder
-
-bash
-cd backend
-
-
-### 2. Install dependencies
-
-bash
-npm install
-
-
-### 3. Create environment file
-
-Create a `.env` file inside the backend folder:
-
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-JWT_SECRET=your_jwt_secret_here
-PORT=4000
-```
-
-### 4. Start backend server
-
-bash
-npm run dev
-
-
-The backend will run on:
-
-txt
-http://localhost:4000/graphql
-
-
-
-
-## Frontend Setup
-
-### 1. Go to frontend folder
-
-bash
-cd frontend
-
-
-### 2. Install dependencies
-
-bash
-npm install
-
-
-### 3. Start frontend
-
-bash
-npm run dev
-
-
-The frontend will run on:
-
-txt
-http://localhost:5173
-
-
-
-
-## Environment Variables
-
-### Backend `.env.example`
-
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-JWT_SECRET=your_jwt_secret_here
-PORT=4000
-```
-
-### Frontend `.env.example`
-
-```env
-VITE_GRAPHQL_URL=http://localhost:4000/graphql
 ```
 
 ---
@@ -402,8 +339,8 @@ VITE_GRAPHQL_URL=http://localhost:4000/graphql
 * `.env` files are ignored using `.gitignore`
 * Passwords are hashed with bcrypt
 * JWT is used for authentication
-* Protected routes are used on the frontend
-* Sensitive credentials should be stored only as environment variables
+* Frontend routes are protected
+* Sensitive credentials are stored only as environment variables
 
 ---
 
@@ -412,31 +349,21 @@ VITE_GRAPHQL_URL=http://localhost:4000/graphql
 * AI task summary generation
 * AI project assistant
 * RAG-based project Q&A
-* pgvector semantic search
+* `pgvector` semantic search
 * Jira-style dashboard UI
 * Kanban board view
 * Workspace member management UI
 * Role-based permissions
 * Deployment with Vercel, Render, and Neon PostgreSQL
+* CI/CD pipeline with GitHub Actions
 
 ---
 
 ## Why I Built This Project
 
-I built Task Flow to practice and demonstrate real-world full-stack development skills using React, TypeScript, GraphQL, PostgreSQL, and Node.js.
+I built Task Flow to demonstrate real-world full-stack development skills using React, TypeScript, GraphQL, Node.js, and PostgreSQL.
 
-The goal was to build a project that goes beyond simple CRUD by including real project management concepts such as:
-
-* Workspaces
-* Projects
-* Tasks
-* Comments
-* Dependencies
-* Activity tracking
-* Authentication
-* AI-ready architecture
-
-This project reflects how modern SaaS tools structure data, track user actions, and prepare for AI-powered productivity features.
+The project goes beyond basic CRUD by implementing real project management concepts such as workspaces, projects, tasks, comments, dependencies, activity tracking, authentication, and AI-ready architecture.
 
 ---
 
