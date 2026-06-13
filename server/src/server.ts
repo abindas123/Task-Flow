@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5001;
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://YOUR-FRONTEND-URL.vercel.app",
+  "https://task-flow-6ewcxftiv-abindas123s-projects.vercel.app",
 ];
 
 await apolloServer.start();
