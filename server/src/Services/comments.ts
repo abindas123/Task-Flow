@@ -1,29 +1,53 @@
-import {Createcomment,Updatecomment,Deletecomment,Getcommentsbytask} from '../Db/Queries/comments.js'
+import {
+  Createcomment,
+  Updatecomment,
+  Deletecomment,
+  Getcommentsbytask,
+} from "../Db/Queries/comments.js";
+
 import { CreateActivityLogService } from "./activitylogs.js";
-import { getProjectWorkspaceById } from "../Db/Queries/workspace.js"
-import { Gettaskbyid } from './tasks.js';
+import { getProjectWorkspaceById } from "../Db/Queries/workspace.js";
+import { Gettaskbyid } from "./tasks.js";
 
-type comments={
-    id:string,
-    task_id:string,
-    author_id:string,
-    body:string,
-    created_at:string,
-    updated_at:string
-}
+import {
+  deleteCommentKnowledgeChunk,
+  upsertCommentKnowledgeChunk,
+} from "./knowledgeservice.js";
 
-export async function Createcommentservice(task_id:string,author_id:string,body:string):Promise<comments>{
-    const createcomment=await Createcomment(task_id,author_id,body)
-    if(!createcomment){
-        throw new Error("error in creating comment")
-    }
-   
-    const task = await Gettaskbyid(task_id);
-      const project = await getProjectWorkspaceById(task.project_id);
+type comments = {
+  id: string;
+  task_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function Createcommentservice(
+  task_id: string,
+  author_id: string,
+  body: string
+): Promise<comments> {
+  const createcomment = await Createcomment(task_id, author_id, body);
+
+  if (!createcomment) {
+    throw new Error("error in creating comment");
+  }
+
+  const task = await Gettaskbyid(task_id);
+
+  const project = await getProjectWorkspaceById(task.project_id);
 
   if (!project) {
     throw new Error("Project not found");
   }
+
+  await upsertCommentKnowledgeChunk(
+    createcomment,
+    task,
+    project.workspace_id
+  );
+
   await CreateActivityLogService(
     project.workspace_id,
     task.project_id,
@@ -33,33 +57,60 @@ export async function Createcommentservice(task_id:string,author_id:string,body:
     {
       task_title: task.title,
       comment_id: createcomment.id,
-     preview: createcomment.body.slice(0, 80),
+      preview: createcomment.body.slice(0, 80),
     }
   );
-    return createcomment
 
+  return createcomment;
 }
 
-export async function Updatecommentservice(id:string,body:string):Promise<comments>{
-    const upadtedcomment=await Updatecomment(id,body)
-    if(!upadtedcomment){
-        throw new Error("error in updating comment")
-    }
-    return upadtedcomment
+export async function Updatecommentservice(
+  id: string,
+  body: string
+): Promise<comments> {
+  const updatedcomment = await Updatecomment(id, body);
+
+  if (!updatedcomment) {
+    throw new Error("error in updating comment");
+  }
+
+  const task = await Gettaskbyid(updatedcomment.task_id);
+
+  const project = await getProjectWorkspaceById(task.project_id);
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  await upsertCommentKnowledgeChunk(
+    updatedcomment,
+    task,
+    project.workspace_id
+  );
+
+  return updatedcomment;
 }
 
-export async function Deletecommentservice(id:string):Promise<comments>{
-    const deleted=await Deletecomment(id)
-    if(!deleted){
-        throw new Error("error in deleting comment")
-    }
-    return deleted
+export async function Deletecommentservice(id: string): Promise<comments> {
+  const deleted = await Deletecomment(id);
+
+  if (!deleted) {
+    throw new Error("error in deleting comment");
+  }
+
+  await deleteCommentKnowledgeChunk(deleted.id);
+
+  return deleted;
 }
 
-export async function Getcommentsbytaskservice(id:string):Promise<comments[]>{
-    const allcomments= await Getcommentsbytask(id)
-    if(!allcomments){
-        throw new Error("error in fetching comments")
-    }
-    return allcomments
+export async function Getcommentsbytaskservice(
+  id: string
+): Promise<comments[]> {
+  const allcomments = await Getcommentsbytask(id);
+
+  if (!allcomments) {
+    throw new Error("error in fetching comments");
+  }
+
+  return allcomments;
 }

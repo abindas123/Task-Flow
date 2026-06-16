@@ -8,6 +8,11 @@ import { CreateActivityLogService } from "./activitylogs.js";
 import { getProjectWorkspaceById } from "../Db/Queries/workspace.js";
 import { Gettaskbyid } from "./tasks.js";
 
+import {
+  deleteDependencyKnowledgeChunk,
+  upsertDependencyKnowledgeChunk,
+} from "./knowledgeservice.js";
+
 type Dependency = {
   id: string;
   task_id: string;
@@ -47,6 +52,13 @@ export async function CreateDependencyService(
     throw new Error("Project not found");
   }
 
+  await upsertDependencyKnowledgeChunk(
+    dependency,
+    blockedTask,
+    blockingTask,
+    project.workspace_id
+  );
+
   await CreateActivityLogService(
     project.workspace_id,
     blockedTask.project_id,
@@ -78,6 +90,8 @@ export async function DeleteDependencyService(id: string): Promise<Dependency> {
   if (!deletedDependency) {
     throw new Error("Error in deleting dependency");
   }
+
+  await deleteDependencyKnowledgeChunk(deletedDependency.id);
 
   return deletedDependency;
 }

@@ -6,11 +6,12 @@ import { taskstypdedefs } from "./tasks.js";
 import { commentsTypedefs } from "./comments.js";
 import { dependencyTypedefs } from "./dependency.js";
 import { activityLogTypeDefs } from "./activitylogs.js";
+import { ragTypeDefs } from "./rag.js";
 
 export const typeDefs=`#grpahql
 ${baseTypeDefs},
 ${usertypeDefs},
 ${workspacetypeDefs},
-${ProjectsTypeDefs},${taskstypdedefs},${commentsTypedefs},${dependencyTypedefs},${activityLogTypeDefs}
+${ProjectsTypeDefs},${taskstypdedefs},${commentsTypedefs},${dependencyTypedefs},${activityLogTypeDefs},${ragTypeDefs}
 
 `

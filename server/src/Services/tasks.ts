@@ -3,13 +3,22 @@ import {
   updatetaskstatus,
   Updatetask,
   gettasksbyid,
-  gettasksbyproject
-} from '../Db/Queries/tasks.js';
-import { getProjectWorkspaceById } from '../Db/Queries/workspace.js';
-import { CreateActivityLogService } from "./activitylogs.js";
+  gettasksbyproject,
+} from "../Db/Queries/tasks.js";
 
-type taskstatus = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'BLOCKED' | 'DONE';
-type priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+import { getProjectWorkspaceById } from "../Db/Queries/workspace.js";
+import { CreateActivityLogService } from "./activitylogs.js";
+import { upsertTaskKnowledgeChunk } from "./knowledgeservice.js";
+
+type taskstatus =
+  | "BACKLOG"
+  | "TODO"
+  | "IN_PROGRESS"
+  | "IN_REVIEW"
+  | "BLOCKED"
+  | "DONE";
+
+type priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 type tasks = {
   id: string;
@@ -34,7 +43,7 @@ export async function Createtaskservice(
   assignee_id: string | null,
   due_date: string | null,
   created_by: string
-):Promise<tasks> {
+): Promise<tasks> {
   const task = await Createtask(
     title,
     description,
@@ -49,11 +58,14 @@ export async function Createtaskservice(
   if (!task) {
     throw new Error("error in creating task");
   }
+
   const project = await getProjectWorkspaceById(task.project_id);
 
   if (!project) {
     throw new Error("Project not found");
   }
+
+  await upsertTaskKnowledgeChunk(task, project.workspace_id);
 
   await CreateActivityLogService(
     project.workspace_id,
@@ -68,7 +80,7 @@ export async function Createtaskservice(
       assignee_id: task.assignee_id,
       due_date: task.due_date,
     }
-  )
+  );
 
   return task;
 }
@@ -80,7 +92,7 @@ export async function Updatetaskservice(
   priority: priority,
   assignee_id: string | null,
   due_date: string | null
-):Promise<tasks> {
+): Promise<tasks> {
   const updatedtask = await Updatetask(
     id,
     title,
@@ -93,6 +105,14 @@ export async function Updatetaskservice(
   if (!updatedtask) {
     throw new Error("error in updating task");
   }
+
+  const project = await getProjectWorkspaceById(updatedtask.project_id);
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  await upsertTaskKnowledgeChunk(updatedtask, project.workspace_id);
 
   return updatedtask;
 }
@@ -119,6 +139,8 @@ export async function Updatetaskstatusservice(
     throw new Error("Project not found");
   }
 
+  await upsertTaskKnowledgeChunk(updatedTask, project.workspace_id);
+
   await CreateActivityLogService(
     project.workspace_id,
     updatedTask.project_id,
@@ -135,7 +157,7 @@ export async function Updatetaskstatusservice(
   return updatedTask;
 }
 
-export async function Gettaskbyid(id: string):Promise<tasks> {
+export async function Gettaskbyid(id: string): Promise<tasks> {
   const task = await gettasksbyid(id);
 
   if (!task) {
@@ -145,7 +167,7 @@ export async function Gettaskbyid(id: string):Promise<tasks> {
   return task;
 }
 
-export async function Gettaskbyproject(project_id: string):Promise<tasks[]> {
+export async function Gettaskbyproject(project_id: string): Promise<tasks[]> {
   const tasks = await gettasksbyproject(project_id);
   return tasks;
 }

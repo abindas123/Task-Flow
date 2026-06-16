@@ -2,12 +2,19 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Divider,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
+
+import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
+
 import { useMutation } from "@apollo/client/react";
 import { DELETE_DEPENDENCY } from "../../graphql/mutations/dependencymutations";
 
@@ -34,6 +41,10 @@ type DependencyListProps = {
   dependencies: Dependency[];
   onChanged: () => void;
 };
+
+function formatLabel(value: string) {
+  return value.replaceAll("_", " ");
+}
 
 function DependencyList({
   taskId,
@@ -64,43 +75,137 @@ function DependencyList({
   }
 
   return (
-    <Stack spacing={3}>
-      {error && <Alert severity="error">{error.message}</Alert>}
+    <Stack sx={{ gap: 3 }}>
+      {error && (
+        <Alert severity="error">
+          Something went wrong while removing dependency. {error.message}
+        </Alert>
+      )}
 
+      {/* Blocked By Section */}
       <Box>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          Blocked by
-        </Typography>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            gap: 1.5,
+            mb: 2,
+          }}
+        >
+          <ReportProblemOutlinedIcon color="warning" />
+
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+              }}
+            >
+              This task is blocked by
+            </Typography>
+
+            <Typography
+              sx={{
+                color: "text.secondary",
+                fontSize: "0.9rem",
+              }}
+            >
+              These tasks must be completed before this task can move forward.
+            </Typography>
+          </Box>
+        </Stack>
 
         {blockedBy.length === 0 ? (
-          <Typography color="text.secondary">
-            This task is not blocked by any task.
-          </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px dashed",
+              borderColor: "divider",
+              borderRadius: 3,
+              bgcolor: "background.default",
+            }}
+          >
+            <Typography sx={{ color: "text.secondary" }}>
+              This task is not blocked by any other task.
+            </Typography>
+          </Paper>
         ) : (
-          <Stack spacing={2}>
+          <Stack sx={{ gap: 2 }}>
             {blockedBy.map((dependency) => (
-              <Paper key={dependency.id} sx={{ p: 2 }}>
-                <Stack spacing={1}>
-                  <Typography>
-                    This task is blocked by:{" "}
-                    <strong>
-                      {dependency.depends_on_task_title ||
-                        dependency.depends_on_task_id}
-                    </strong>
-                  </Typography>
+              <Paper
+                key={dependency.id}
+                elevation={0}
+                sx={{
+                  p: 2.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 3,
+                  bgcolor: "background.default",
+                }}
+              >
+                <Stack sx={{ gap: 2 }}>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    sx={{
+                      justifyContent: "space-between",
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      gap: 2,
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      sx={{
+                        alignItems: "center",
+                        gap: 1.5,
+                      }}
+                    >
+                      <LinkIcon color="primary" />
 
-                  <Typography variant="body2" color="text.secondary">
-                    Type: {dependency.dependency_type}
-                  </Typography>
+                      <Box>
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {dependency.depends_on_task_title ||
+                            "Unknown blocking task"}
+                        </Typography>
+
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          This task must be finished first.
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    <Chip
+                      label={formatLabel(dependency.dependency_type)}
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Stack>
 
                   <Button
                     variant="outlined"
                     color="error"
                     size="small"
+                    startIcon={
+                      loading ? (
+                        <CircularProgress size={16} />
+                      ) : (
+                        <DeleteIcon />
+                      )
+                    }
                     onClick={() => handleDelete(dependency.id)}
                     disabled={loading}
+                    sx={{
+                      alignSelf: { xs: "stretch", sm: "flex-start" },
+                    }}
                   >
-                    {loading ? <CircularProgress size={20} /> : "Remove"}
+                    Remove Dependency
                   </Button>
                 </Stack>
               </Paper>
@@ -111,39 +216,129 @@ function DependencyList({
 
       <Divider />
 
+      {/* Blocking Section */}
       <Box>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          Blocking
-        </Typography>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            gap: 1.5,
+            mb: 2,
+          }}
+        >
+          <SyncAltIcon color="primary" />
+
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+              }}
+            >
+              This task is blocking
+            </Typography>
+
+            <Typography
+              sx={{
+                color: "text.secondary",
+                fontSize: "0.9rem",
+              }}
+            >
+              These tasks are waiting for the current task to be completed.
+            </Typography>
+          </Box>
+        </Stack>
 
         {blocking.length === 0 ? (
-          <Typography color="text.secondary">
-            No other tasks are waiting for this task.
-          </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px dashed",
+              borderColor: "divider",
+              borderRadius: 3,
+              bgcolor: "background.default",
+            }}
+          >
+            <Typography sx={{ color: "text.secondary" }}>
+              No other tasks are waiting for this task.
+            </Typography>
+          </Paper>
         ) : (
-          <Stack spacing={2}>
+          <Stack sx={{ gap: 2 }}>
             {blocking.map((dependency) => (
-              <Paper key={dependency.id} sx={{ p: 2 }}>
-                <Stack spacing={1}>
-                  <Typography>
-                    This task is blocking:{" "}
-                    <strong>
-                      {dependency.task_title || dependency.task_id}
-                    </strong>
-                  </Typography>
+              <Paper
+                key={dependency.id}
+                elevation={0}
+                sx={{
+                  p: 2.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 3,
+                  bgcolor: "background.default",
+                }}
+              >
+                <Stack sx={{ gap: 2 }}>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    sx={{
+                      justifyContent: "space-between",
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      gap: 2,
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      sx={{
+                        alignItems: "center",
+                        gap: 1.5,
+                      }}
+                    >
+                      <LinkIcon color="primary" />
 
-                  <Typography variant="body2" color="text.secondary">
-                    Type: {dependency.dependency_type}
-                  </Typography>
+                      <Box>
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {dependency.task_title || "Unknown dependent task"}
+                        </Typography>
+
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          This task depends on the current task.
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    <Chip
+                      label={formatLabel(dependency.dependency_type)}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Stack>
 
                   <Button
                     variant="outlined"
                     color="error"
                     size="small"
+                    startIcon={
+                      loading ? (
+                        <CircularProgress size={16} />
+                      ) : (
+                            <DeleteIcon />
+                      )
+                    }
                     onClick={() => handleDelete(dependency.id)}
                     disabled={loading}
+                    sx={{
+                      alignSelf: { xs: "stretch", sm: "flex-start" },
+                    }}
                   >
-                    {loading ? <CircularProgress size={20} /> : "Remove"}
+                    Remove Dependency
                   </Button>
                 </Stack>
               </Paper>

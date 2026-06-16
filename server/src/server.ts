@@ -8,10 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 const allowedOrigins = [
+
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
   "https://task-flow-ochre-one.vercel.app",
   "https://task-flow-6ewcxftiv-abindas123s-projects.vercel.app",
 ];
+
 
 const corsOptions = {
   origin: function (

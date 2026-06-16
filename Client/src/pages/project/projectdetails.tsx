@@ -5,15 +5,25 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Divider,
+  Paper,
   Stack,
   Typography,
-  Divider,
 } from "@mui/material";
+
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import HistoryIcon from "@mui/icons-material/History";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ProjectAIAssistant from "../../components/Ai/ProjectAiassistant";
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
+
 import { getProjectById } from "../../graphql/queries/projectQueries";
 import TaskList from "../../components/task/tasklist";
-
 import { GET_ACTIVITY_LOGS_BY_PROJECT } from "../../graphql/queries/activitylogsQueries";
 import ActivityLogList from "../../components/activitylogs/activitylogs";
 
@@ -58,6 +68,22 @@ type GetActivityLogsByProjectVariables = {
   project_id: string;
 };
 
+function getStatusColor(status: ProjectStatus) {
+  if (status === "ACTIVE") return "success";
+  if (status === "ON_HOLD") return "warning";
+  return "default";
+}
+
+function formatDate(date?: string | null) {
+  if (!date) return "Not available";
+
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -87,106 +113,349 @@ function ProjectDetailPage() {
   });
 
   if (!projectId) {
-    return <Alert severity="error">Project ID is missing</Alert>;
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4 }}>
+          <Alert severity="error">Project ID is missing.</Alert>
+        </Box>
+      </Container>
+    );
   }
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            minHeight: "60vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Stack sx={{ alignItems: "center", gap: 2 }}>
+            <CircularProgress />
+            <Typography sx={{ color: "text.secondary" }}>
+              Loading project details...
+            </Typography>
+          </Stack>
+        </Box>
+      </Container>
+    );
   }
 
   if (error) {
-    return <Alert severity="error">{error.message}</Alert>;
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4 }}>
+          <Alert severity="error">
+            Something went wrong while loading this project. {error.message}
+          </Alert>
+        </Box>
+      </Container>
+    );
   }
 
   const project = data?.getProjectById;
 
   if (!project) {
-    return <Alert severity="warning">Project not found</Alert>;
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4 }}>
+          <Alert severity="warning">Project not found.</Alert>
+        </Box>
+      </Container>
+    );
   }
 
+  const activityLogs = activityData?.GetActivityLogsByProject ?? [];
+
   return (
-    <Container>
-      <Box sx={{ mt: 4 }}>
-        <Button
-          variant="outlined"
-          sx={{ mb: 3 }}
-          onClick={() =>
-            navigate(`/workspaces/${project.workspace_id}/projects`)
-          }
-        >
-          Back to Projects
-        </Button>
-
-        <Stack spacing={2}>
-          <Typography variant="h4">{project.name}</Typography>
-
-          <Typography variant="body1" color="text.secondary">
-            {project.description || "No description"}
-          </Typography>
-
-          <Chip
-            label={project.status}
-            color={
-              project.status === "ACTIVE"
-                ? "success"
-                : project.status === "ON_HOLD"
-                ? "warning"
-                : "default"
+    <Container maxWidth="lg">
+      <Box sx={{ py: 4 }}>
+        <Stack sx={{ gap: 4 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            sx={{
+              alignSelf: "flex-start",
+            }}
+            onClick={() =>
+              navigate(`/workspaces/${project.workspace_id}/projects`)
             }
-            sx={{ width: "fit-content" }}
-          />
+          >
+            Back to Projects
+          </Button>
 
-          <Typography variant="body2">
-            <strong>Project ID:</strong> {project.id}
-          </Typography>
+          {/* Project Header */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 3,
+            }}
+          >
+            <Stack sx={{ gap: 3 }}>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: { xs: "flex-start", md: "center" },
+                  gap: 2,
+                }}
+              >
+                <Box>
+                  <Stack
+                    direction="row"
+                    sx={{
+                      alignItems: "center",
+                      gap: 1.5,
+                    }}
+                  >
+                    <FolderOpenIcon color="primary" fontSize="large" />
 
-          <Typography variant="body2">
-            <strong>Workspace ID:</strong> {project.workspace_id}
-          </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontWeight: 700,
+                      }}
+                    >
+                      {project.name}
+                    </Typography>
+                  </Stack>
 
-          <Typography variant="body2">
-            <strong>Created By:</strong> {project.created_by}
-          </Typography>
+                  <Typography
+                    sx={{
+                      mt: 1,
+                      color: "text.secondary",
+                      maxWidth: 800,
+                    }}
+                  >
+                    {project.description ||
+                      "No description added for this project."}
+                  </Typography>
+                </Box>
 
-          <Typography variant="body2">
-            <strong>Created At:</strong> {project.created_at}
-          </Typography>
+                <Chip
+                  label={project.status.replace("_", " ")}
+                  color={getStatusColor(project.status)}
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                />
+              </Stack>
 
-          <Typography variant="body2">
-            <strong>Updated At:</strong> {project.updated_at}
-          </Typography>
+              <Divider />
+
+              {/* Project Meta Info */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, 1fr)",
+                    md: "repeat(3, 1fr)",
+                  },
+                  gap: 2,
+                }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    bgcolor: "background.default",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Stack direction="row" sx={{ gap: 1.5, alignItems: "center" }}>
+                    <CalendarMonthIcon color="primary" />
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontSize: "0.8rem",
+                          color: "text.secondary",
+                        }}
+                      >
+                        Created
+                      </Typography>
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {formatDate(project.created_at)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    bgcolor: "background.default",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Stack direction="row" sx={{ gap: 1.5, alignItems: "center" }}>
+                    <CalendarMonthIcon color="primary" />
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontSize: "0.8rem",
+                          color: "text.secondary",
+                        }}
+                      >
+                        Updated
+                      </Typography>
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {formatDate(project.updated_at)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    bgcolor: "background.default",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Stack direction="row" sx={{ gap: 1.5, alignItems: "center" }}>
+                    <InfoOutlinedIcon color="primary" />
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontSize: "0.8rem",
+                          color: "text.secondary",
+                        }}
+                      >
+                        Activity Logs
+                      </Typography>
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {activityLogs.length} log
+                        {activityLogs.length === 1 ? "" : "s"}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Box>
+            </Stack>
+          </Paper>
+          {projectId && <ProjectAIAssistant projectId={projectId} />}
+
+          {/* Tasks Section */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 3,
+            }}
+          >
+            <Stack sx={{ gap: 3 }}>
+              <Box>
+                <Stack
+                  direction="row"
+                  sx={{
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <AssignmentIcon color="primary" />
+
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    Tasks
+                  </Typography>
+                </Stack>
+
+                <Typography
+                  sx={{
+                    mt: 0.5,
+                    color: "text.secondary",
+                  }}
+                >
+                  Create, assign, update, and track tasks inside this project.
+                </Typography>
+              </Box>
+
+              <TaskList
+                project_id={projectId}
+                workspace_id={project.workspace_id}
+              />
+            </Stack>
+          </Paper>
+
+          {/* Activity Log Section */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 3,
+            }}
+          >
+            <Stack sx={{ gap: 3 }}>
+              <Box>
+                <Stack
+                  direction="row"
+                  sx={{
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <HistoryIcon color="primary" />
+
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    Activity Log
+                  </Typography>
+                </Stack>
+
+                <Typography
+                  sx={{
+                    mt: 0.5,
+                    color: "text.secondary",
+                  }}
+                >
+                  Recent project activity such as task creation, comments,
+                  status changes, and dependencies.
+                </Typography>
+              </Box>
+
+              {activityLoading && (
+                <Stack sx={{ alignItems: "center", gap: 2, py: 3 }}>
+                  <CircularProgress />
+                  <Typography sx={{ color: "text.secondary" }}>
+                    Loading activity logs...
+                  </Typography>
+                </Stack>
+              )}
+
+              {activityError && (
+                <Alert severity="error">
+                  Something went wrong while loading activity logs.{" "}
+                  {activityError.message}
+                </Alert>
+              )}
+
+              {!activityLoading && !activityError && (
+                <ActivityLogList logs={activityLogs} />
+              )}
+            </Stack>
+          </Paper>
         </Stack>
-
-        <Box sx={{ mt: 5 }}>
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            Tasks
-          </Typography>
-
-          <Box sx={{ mt: 3 }}>
-            <TaskList
-              project_id={projectId}
-              workspace_id={project.workspace_id}
-            />
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          Activity Log
-        </Typography>
-
-        {activityLoading && <CircularProgress />}
-
-        {activityError && (
-          <Alert severity="error">{activityError.message}</Alert>
-        )}
-
-        {!activityLoading && !activityError && (
-          <ActivityLogList
-            logs={activityData?.GetActivityLogsByProject ?? []}
-          />
-        )}
       </Box>
     </Container>
   );

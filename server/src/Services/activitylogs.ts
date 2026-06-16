@@ -2,6 +2,7 @@ import {
   CreateActivityLog,
   GetActivityLogsByProject,
 } from "../Db/Queries/activitylogs.js";
+import { upsertActivityLogKnowledgeChunk } from "./knowledgeservice.js";
 
 export type ActivityType =
   | "WORKSPACE_CREATED"
@@ -46,6 +47,7 @@ export async function CreateActivityLogService(
   if (!activity) {
     throw new Error("Error creating activity log");
   }
+  await upsertActivityLogKnowledgeChunk(activity);
 
   return activity;
 }
